@@ -1,3 +1,10 @@
 __pycache__
 */__pycache__
 degree_project
+anaconda_prompt.txt
+datasets/*
+scripts/*
+notebooks/*
+*.ipynb_checkpoints
+*.png
+yolo*.pt
