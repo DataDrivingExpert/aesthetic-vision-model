@@ -51,7 +51,7 @@ class Controller(object):
         results = self.model.predict(tuple(pp_data))
         
         # Procesar los resultados según sea necesario
-        print(results)
+        
         return results
 
     

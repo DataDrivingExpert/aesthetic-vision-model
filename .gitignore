@@ -5,6 +5,9 @@ anaconda_prompt.txt
 datasets/*
 scripts/*
 notebooks/*
+outputs/predictions/*
+outputs/preprocessed_img/*
+outputs/plots/*
 *.ipynb_checkpoints
 *.png
 yolo*.pt
