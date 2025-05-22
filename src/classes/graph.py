@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Vertice(object):
-    def __init__(self, id:int, cLabel:str):
+    def __init__(self, id:int, cLabel:str='Non Label'):
         self.id = id
         self.cLabel = cLabel
     
@@ -27,6 +27,12 @@ class Graph(object):
     
     def get_graph(self) -> np.ndarray:
         return self.graph
+    
+    def get_v_by_id(self, id:int) -> Vertice:
+        for v in self.V:
+            if v.get_id() == id:
+                return v
+        return None
     
 
 class GraphSymmetry(Graph):

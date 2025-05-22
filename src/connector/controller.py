@@ -6,7 +6,11 @@ Idealmente debe contener lógica mínima.
 from .gen_graphs import AestheticGraph
 from .input_handler import Preprocessor
 from .inference_runner import InferenceRunner
+from .output_formatter import OutputFormatter as OF
 import os
+import shutil
+from ultralytics.engine.results import Results
+import numpy as np
 
 
 class Controller(object):
@@ -21,7 +25,9 @@ class Controller(object):
         model_path = os.path.normpath(model_path)
         model = InferenceRunner(model_path)
 
+
         self.model = model
+        self.outFormatter = OF()
         self.symmetry_graph = symmetry_graph
         self.continuity_graph = continuity_graph
 
@@ -33,6 +39,99 @@ class Controller(object):
         preprocessed_data = preprocessor.perform(input_data)
         
         return preprocessed_data
+    
+    def __eval_global_symmetry(self,cls_ids:list[int]):
+        """
+        Evalúa la simetría global de los objetos detectados.
+        """
+        # cor: elementos correspondientes de la secuencia (e.g. 1-7,2-6,3-5) 
+        score = 0
+        g = self.symmetry_graph
+        
+        for i in range(len(cls_ids)):
+            if i != 4 and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[-(i+1)])):
+                score += 1
+
+        return score
+    
+    def __eval_local_symmetry(self,cls_ids:list[int]):
+        """
+        Evalúa la simetría local de los objetos detectados.
+        """
+        # cor: elementos correspondientes de la secuencia (e.g. 1-7,2-6,3-5) 
+        score = 0
+        g = self.symmetry_graph
+        
+        for i in range(len(cls_ids)):
+            if i != 6 and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[i+1])):
+                score += 1
+
+        return score
+    
+    def __eval_continuity(self,cls_ids:list[int]):
+        """
+        Evalúa la continuidad de los objetos detectados.
+        """
+        # cor: elementos correspondientes de la secuencia (e.g. 1-7,2-6,3-5) 
+        score = 0
+        g = self.continuity_graph
+        
+        for i in range(len(cls_ids)):
+            if i != 6 and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[i+1])):
+                score += 1
+
+        return score
+
+    def __translate(self, results:Results):
+        """
+        Traduce los resultados del modelo a una evaluación del estímulo estético, en términos 
+        de la simetría y continuidad de los objetos detectados.
+        """
+        evaluation = {
+            'image_name': [],
+            'global_symmetry': [],
+            'local_symmetry': [],
+            'continuity': [],
+            'rejected': []
+        }
+
+        def register_eval(image_name, global_symmetry, local_symmetry, continuity, rejected):
+            evaluation["image_name"].append(image_name)
+            evaluation["global_symmetry"].append(global_symmetry)
+            evaluation["local_symmetry"].append(local_symmetry)
+            evaluation["continuity"].append(continuity)
+            evaluation["rejected"].append(rejected)
+
+        for r in results:
+            boxes = r.boxes
+            bb = boxes.xywh.cpu().numpy()
+            cls = boxes.cls.cpu().numpy()
+            img_name = os.path.basename(r.path)
+
+            _sorted = [] # Lista de clases por cada objeto detectado en la imagen.
+                         # Ordenadas de izquierda a derecha.
+            for j in np.argsort(bb[:,0]):
+                _sorted.append(int(cls[j]))
+            
+            if len(_sorted) != 7:
+                # Si no hay 7 objetos detectados, no se puede evaluar la imagen.
+                register_eval(img_name,0,0,0,True)
+                continue
+            else:
+                global_symm = self.__eval_global_symmetry(_sorted)
+                local_symm = self.__eval_local_symmetry(_sorted)
+                continuity = self.__eval_continuity(_sorted)
+                register_eval(img_name, global_symm, local_symm, continuity, False)
+
+        return evaluation
+
+    def perform_eval(self, results:Results):
+        """
+        Realiza la evaluación de los resultados del modelo.
+        """
+        # Evaluar los resultados
+        evaluation = self.__translate(results)
+        self.outFormatter.write_output(evaluation)
 
     def run_inference(self, input_data):
         """
@@ -50,8 +149,32 @@ class Controller(object):
 
         results = self.model.predict(tuple(pp_data))
         
-        # Procesar los resultados según sea necesario
+        self.perform_eval(results)
+
+    def __clean_outputs(self):
+        """
+        Limpia los outputs generados por el preprocesador y las predicciones generadas por
+        el programa.
+        """
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        output_path = os.path.join(base_dir, '..','..','outputs')
+
+        pp_data_path = os.path.join(output_path, 'preprocessed_img')
+        pred_data_path = os.path.join(output_path, 'predictions')
+
+        for filename in os.listdir(pp_data_path):
+            os.remove(os.path.join(pp_data_path, filename))
+
+        shutil.rmtree(pred_data_path)
+        os.mkdir(pred_data_path)
+        os.mkdir(os.path.join(pred_data_path, 'images'))
         
-        return results
+
+    def close(self):
+        """
+        Elimina los outputs generados por el preprocesador y las predicciones generadas por
+        el programa.
+        """
+        self.__clean_outputs()
 
     

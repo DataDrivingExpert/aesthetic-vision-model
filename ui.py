@@ -3,6 +3,7 @@ from src.connector.controller import Controller
 from tkinter import filedialog
 from PIL import Image
 from typing import Literal
+import pandas as pd
 import threading
 import os
 
@@ -19,6 +20,9 @@ class AestheticApp(ctk.CTk):
         self.loaded_data:list[str] = [] # Lista de imágenes cargadas
         self.deployed_data:list[str] = [] # Lista de imágenes desplegadas
         self.deployed_index = 0         # Índice de la imagen actual en pantalla
+        self.d_local_symm = None   # CTkLabel para mostrar el resultado de la simetría local
+        self.d_global_symm = None    # CTkLabel para mostrar el resultado de la simetría global
+        self.d_continuity = None   # CTkLabel para mostrar el resultado de la continuidad
         self.img_canvas = None      # Label para mostrar la imagen
         self.mode_btn_icons = (
             ctk.CTkImage(Image.open(os.path.join(self.statics_path, 'Inbox.png')), size=(30, 30)),
@@ -147,9 +151,9 @@ class AestheticApp(ctk.CTk):
         right_col_frame.grid_columnconfigure(0, weight=1)
         right_col_frame.grid_rowconfigure((0, 1, 2), weight=1)
 
-        self.create_score_frame(right_col_frame, 0, "Local Symmetry Score")
-        self.create_score_frame(right_col_frame, 1, "Global Symmetry Score")
-        self.create_score_frame(right_col_frame, 2, "Continuity Score")
+        self.d_local_symm = self.create_score_frame(right_col_frame, 0,"Local Symmetry Score")
+        self.d_global_symm = self.create_score_frame(right_col_frame, 1,"Global Symmetry Score")
+        self.d_continuity = self.create_score_frame(right_col_frame, 2,"Continuity Score")
 
     def create_score_frame(self, parent, row, label_text):
         score_frame = ctk.CTkFrame(master=parent)
@@ -157,9 +161,13 @@ class AestheticApp(ctk.CTk):
         score_frame.grid_columnconfigure(0, weight=1)
         score_frame.grid_rowconfigure((0, 1, 2), weight=1)
 
-        ctk.CTkLabel(master=score_frame, text="3", font=("", 40)).grid(row=0, column=0, sticky='nsew')
+        score = ctk.CTkLabel(master=score_frame, text='0', font=("", 40))
+        score.grid(row=0, column=0, sticky='nsew')
+
         ctk.CTkLabel(master=score_frame, text="Points", font=("", 15)).grid(row=1, column=0, padx=5, pady=5, sticky='nsew')
         ctk.CTkLabel(master=score_frame, text=label_text, font=("", 20)).grid(row=2, column=0, padx=5, pady=5, sticky='nsew')
+
+        return score
 
     def create_button_row(self, parent):
         btn_row = ctk.CTkFrame(master=parent)
@@ -211,7 +219,7 @@ class AestheticApp(ctk.CTk):
 
     def __update_predictions(self):
         # Ubicar la salida de la predicción
-        prediction_path = os.path.join(self.base_dir, 'outputs', 'predictions')
+        prediction_path = os.path.join(self.base_dir, 'outputs', 'predictions','images')
         prediction_filenames = os.listdir(prediction_path)
         prediction_data = [os.path.join(prediction_path, filename) for filename in prediction_filenames]
 
@@ -221,6 +229,7 @@ class AestheticApp(ctk.CTk):
         if self.deployed_index > 0:
             self.deployed_index -= 1
             self.update_image_canvas(self.deployed_data[self.deployed_index])
+            self.__update_metrics()
         else:
             pass
 
@@ -228,6 +237,7 @@ class AestheticApp(ctk.CTk):
         if self.deployed_index < len(self.deployed_data) - 1:
             self.deployed_index += 1
             self.update_image_canvas(self.deployed_data[self.deployed_index])
+            self.__update_metrics()
         else:
             pass
 
@@ -245,6 +255,28 @@ class AestheticApp(ctk.CTk):
         self.deployed_index = 0
         self.update_image_canvas()
 
+    def __update_metrics(self):
+        # Ubicar la salida de la predicción
+        prediction_path = os.path.join(self.base_dir, 'outputs', 'predictions')
+        df = pd.read_excel(os.path.join(prediction_path, 'analysis.xlsx'))
+        img_name = self.deployed_data[self.deployed_index]
+        img_name = os.path.basename(img_name)
+
+        data = df[df['image_name'] == img_name]
+
+        if not data.empty:
+            local_symm = data['local_symmetry'].values[0]
+            global_symm = data['global_symmetry'].values[0]
+            continuity = data['continuity'].values[0]
+
+            self.d_local_symm.configure(text=local_symm)
+            self.d_global_symm.configure(text=global_symm)
+            self.d_continuity.configure(text=continuity)
+        else:
+            self.d_local_symm.configure(text="0")
+            self.d_global_symm.configure(text="0")
+            self.d_continuity.configure(text="0")
+        pass
 
     def evaluate(self):
         if self.loaded_data:
@@ -261,6 +293,7 @@ class AestheticApp(ctk.CTk):
         pass
 
     def on_close(self):
+        self.controller.close()
         self.destroy()
 
     def watch_thread(self):
@@ -270,6 +303,7 @@ class AestheticApp(ctk.CTk):
             # Ubicar la salida de la predicción
             self.__update_predictions()
             self.__update_mode()
+            self.__update_metrics()
             pass
             
 

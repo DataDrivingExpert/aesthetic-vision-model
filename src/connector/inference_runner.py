@@ -31,7 +31,7 @@ class InferenceRunner(object):
             source=image_path,
             save=True,
             project='outputs',
-            name='predictions',
+            name='predictions/images',
             exist_ok=True
             )
 
