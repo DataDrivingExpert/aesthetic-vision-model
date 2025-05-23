@@ -19,7 +19,16 @@ class AestheticApp(ctk.CTk):
         self.controller = Controller()  # Instancia del controlador
         self.loaded_data:list[str] = [] # Lista de imágenes cargadas
         self.deployed_data:list[str] = [] # Lista de imágenes desplegadas
+        self.prediction_results = [] # Resultados de la predicción
+        self.model_thread = None    # Hilo para la predicción
+        
+        # Modificadores de UI
+        self.canvas_mode:Literal['input','pred'] = 'input' # Modo del Canvas
+        self.loader_index = 0           # Índice del GIF Loader.gif
         self.deployed_index = 0         # Índice de la imagen actual en pantalla
+        self.animation_index = 0        # Índice para recorrer la animación emergente
+
+        # UI Widgets
         self.d_local_symm = None   # CTkLabel para mostrar el resultado de la simetría local
         self.d_global_symm = None    # CTkLabel para mostrar el resultado de la simetría global
         self.d_continuity = None   # CTkLabel para mostrar el resultado de la continuidad
@@ -29,14 +38,8 @@ class AestheticApp(ctk.CTk):
             ctk.CTkImage(Image.open(os.path.join(self.statics_path, 'Chip.png')), size=(30, 30))
         )
         self.mode_btn = None        # Botón para cambiar entre modo de entrada y predicción
-        self.canvas_mode:Literal['input','pred'] = 'input'
-        self.model_thread = None    # Hilo para la predicción
-
-        self.prediction_results = [] # Resultados de la predicción
-
-        # Variable para el loader
-        self.loader_frames = self.__load_gif(os.path.join(self.statics_path, 'loader.gif'))
-        self.loader_index = 0
+        self.loader_frames = self.__load_gif(os.path.join(self.statics_path, 'loader.gif')) # Variable para el Loader.gif
+        
 
         # Configuración de la ventana principal
         self.title("Degree Project")
@@ -177,26 +180,8 @@ class AestheticApp(ctk.CTk):
         ctk.CTkButton(master=btn_row, text="clear all", command=self.clear_all).grid(row=0, column=1, padx=5, pady=5)
         ctk.CTkButton(master=btn_row, text="save results", command=self.save_results).grid(row=0, column=2, padx=5, pady=15)
 
-    # --- Lógica de botones ---
-    def upload_single(self):
-        file_path = filedialog.askopenfilename(
-            title="Selecciona una imagen",
-            filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.gif")]
-        )
-        if file_path:
-            self.loaded_data.append(file_path)
-            self.deployed_data.append(file_path)
-            self.update_image_canvas()
-            
+    # Lógica de UI
 
-    def upload_directory(self):
-        directory_path = filedialog.askdirectory(
-            title="Selecciona una carpeta con imágenes"
-        )
-        if directory_path:
-            pass
-
-    
     def __load_gif(self, path):
         gif = Image.open(path)
         frames = []
@@ -291,6 +276,39 @@ class AestheticApp(ctk.CTk):
         self.d_continuity.configure(text="0")
         pass
 
+    def watch_thread(self):
+        if self.model_thread.is_alive():
+            self.after(100, self.watch_thread)
+        else:
+            # Ubicar la salida de la predicción
+            self.__update_predictions()
+            self.__update_mode()
+            self.__update_metrics()
+            pass
+
+    # --- Lógica de botones ---
+    def upload_single(self):
+        file_path = filedialog.askopenfilename(
+            title="Selecciona una imagen",
+            filetypes=[("Imágenes", "*.png *.jpg *.jpeg *.bmp *.gif")]
+        )
+        if file_path:
+            self.loaded_data.append(file_path)
+            self.deployed_data.append(file_path)
+            self.update_image_canvas()
+            
+
+    def upload_directory(self):
+        directory_path = filedialog.askdirectory(
+            title="Selecciona una carpeta con imágenes"
+        )
+        if directory_path:
+            files = self.controller.retrieve_valid_files(directory_path)
+            self.loaded_data.extend(files)
+            self.deployed_data.extend(files)
+            self.update_image_canvas()
+            pass
+
     def evaluate(self):
         if self.loaded_data:
             self.model_thread = threading.Thread(target=self.controller.run_inference, args=(self.loaded_data,))
@@ -327,17 +345,6 @@ class AestheticApp(ctk.CTk):
     def on_close(self):
         self.controller.clean_all()
         self.destroy()
-
-    def watch_thread(self):
-        if self.model_thread.is_alive():
-            self.after(100, self.watch_thread)
-        else:
-            # Ubicar la salida de la predicción
-            self.__update_predictions()
-            self.__update_mode()
-            self.__update_metrics()
-            pass
-            
 
 
 if __name__ == "__main__":

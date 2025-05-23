@@ -107,9 +107,9 @@ class Controller(object):
 
         for r in results:
             boxes = r.boxes
-            bb = boxes.xywh.cpu().numpy()
-            cls = boxes.cls.cpu().numpy()
-            img_name = os.path.basename(r.path)
+            bb = boxes.xywh.cpu().numpy() # Bounding box en formato x_center y_center width height
+            cls = boxes.cls.cpu().numpy() # ID de las clases detectadas
+            img_name = os.path.basename(r.path) # Nombre de la imagen
 
             _sorted = [] # Lista de clases por cada objeto detectado en la imagen.
                          # Ordenadas de izquierda a derecha.
@@ -153,6 +153,9 @@ class Controller(object):
         results = self.model.predict(tuple(pp_data))
         
         self.perform_eval(results)
+
+    def retrieve_valid_files(self, dir_path:str):
+        return Preprocessor.retrieve_valid_files(dir_path)
 
     def __clean_outputs(self):
         """

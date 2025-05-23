@@ -51,8 +51,8 @@ def unir_imagenes_horizontal_centrado(lista_rutas, ancho_final=640, altura_final
 
 # Ejemplo de uso:
 directorio = "Abstract"
-nombres_imagenes = [f for f in os.listdir(directorio) if os.path.isfile(os.path.join(directorio, f))]
-# nombres_imagenes = ['left 2.png','right 03.png']
+# nombres_imagenes = [f for f in os.listdir(directorio) if os.path.isfile(os.path.join(directorio, f))]
+nombres_imagenes = ['left 2.png','right 03.png']
 
 for i in range(17):
     random.shuffle(nombres_imagenes)

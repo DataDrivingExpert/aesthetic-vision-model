@@ -40,7 +40,19 @@ class Preprocessor:
             
             grayscale_image.save(save_path, format="PNG")
             
+    @staticmethod
+    def retrieve_valid_files(dir_path:str):
+        valid_ext = {'.png', '.jpg', '.jpeg'}
+        img_path = []
 
+        for root, dirs, files in os.walk(dir_path):
+            for fl in files:
+                _, extension = os.path.splitext(fl)
+                if extension.lower() in valid_ext:
+                    ruta_completa = os.path.join(root, fl)
+                    img_path.append(ruta_completa)
+
+        return img_path
 
     def __convert_to_png(self, input_path):
         # Abrir imagen

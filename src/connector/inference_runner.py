@@ -20,11 +20,12 @@ class InferenceRunner(object):
         self.model = YOLO(self.model_path)
 
     
-    def predict(self, image_path: tuple[str]):
+    def predict(self, image_path):
         """
-        Realiza la inferencia en una imagen y devuelve los resultados.
+        Realiza la inferencia en una imagen o en un lote de imágenes 
+        y devuelve los resultados.
 
-        :param image_path: Ruta de la imagen.
+        :param image_path: Ruta de la/s imagen/imágenes.
         :return: Resultados de la inferencia.
         """
         results = self.model.predict(
@@ -32,7 +33,8 @@ class InferenceRunner(object):
             save=True,
             project='outputs',
             name='predictions/images',
-            exist_ok=True
+            exist_ok=True,
+            verbose=False
             )
 
         return results
