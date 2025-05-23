@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from src.connector.controller import Controller
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from PIL import Image
 from typing import Literal
 import pandas as pd
@@ -31,7 +31,6 @@ class AestheticApp(ctk.CTk):
         self.mode_btn = None        # Botón para cambiar entre modo de entrada y predicción
         self.canvas_mode:Literal['input','pred'] = 'input'
         self.model_thread = None    # Hilo para la predicción
-        self.has_predicted = False  # Bandera para verificar si se ha hecho una predicción
 
         self.prediction_results = [] # Resultados de la predicción
 
@@ -186,7 +185,7 @@ class AestheticApp(ctk.CTk):
         )
         if file_path:
             self.loaded_data.append(file_path)
-            self.deployed_data.extend(self.loaded_data)
+            self.deployed_data.append(file_path)
             self.update_image_canvas()
             
 
@@ -252,30 +251,44 @@ class AestheticApp(ctk.CTk):
             self.mode_btn.configure(text="Mode: input images", image=inbox)
             self.deployed_data = self.loaded_data
 
-        self.deployed_index = 0
         self.update_image_canvas()
 
     def __update_metrics(self):
         # Ubicar la salida de la predicción
         prediction_path = os.path.join(self.base_dir, 'outputs', 'predictions')
-        df = pd.read_excel(os.path.join(prediction_path, 'analysis.xlsx'))
-        img_name = self.deployed_data[self.deployed_index]
-        img_name = os.path.basename(img_name)
+        analysis_path = os.path.join(prediction_path, 'analysis')
+        
+        if os.path.exists(analysis_path):
+            df = pd.read_excel(analysis_path)
+            img_name = self.deployed_data[self.deployed_index]
+            img_name = os.path.basename(img_name)
 
-        data = df[df['image_name'] == img_name]
+            data = df[df['image_name'] == img_name]
 
-        if not data.empty:
-            local_symm = data['local_symmetry'].values[0]
-            global_symm = data['global_symmetry'].values[0]
-            continuity = data['continuity'].values[0]
+            if not data.empty:
+                local_symm = data['local_symmetry'].values[0]
+                global_symm = data['global_symmetry'].values[0]
+                continuity = data['continuity'].values[0]
 
-            self.d_local_symm.configure(text=local_symm)
-            self.d_global_symm.configure(text=global_symm)
-            self.d_continuity.configure(text=continuity)
-        else:
-            self.d_local_symm.configure(text="0")
-            self.d_global_symm.configure(text="0")
-            self.d_continuity.configure(text="0")
+                self.d_local_symm.configure(text=local_symm)
+                self.d_global_symm.configure(text=global_symm)
+                self.d_continuity.configure(text=continuity)
+            else:
+                self.d_local_symm.configure(text="0")
+                self.d_global_symm.configure(text="0")
+                self.d_continuity.configure(text="0")
+        pass
+
+    def __reset_ui(self):
+        self.loaded_data = []
+        self.deployed_data = []
+        self.deployed_index = 0
+        self.prediction_results = []
+        self.img_canvas.configure(image="", text="No image loaded")
+        self.img_canvas.image = None
+        self.d_local_symm.configure(text="0")
+        self.d_global_symm.configure(text="0")
+        self.d_continuity.configure(text="0")
         pass
 
     def evaluate(self):
@@ -287,6 +300,14 @@ class AestheticApp(ctk.CTk):
         pass
 
     def clear_all(self):
+        res = messagebox.askyesno(
+                title="Confirmación",
+                message="¿Estás seguro de que deseas limpiar todos los resultados? Los datos no se guardarán.",
+                icon="warning"
+            )
+        if res:
+            self.controller.clean_all()
+            self.__reset_ui()
         pass
 
     def save_results(self):
@@ -304,7 +325,7 @@ class AestheticApp(ctk.CTk):
         pass
 
     def on_close(self):
-        self.controller.close()
+        self.controller.clean_all()
         self.destroy()
 
     def watch_thread(self):

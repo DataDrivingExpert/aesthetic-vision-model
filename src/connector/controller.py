@@ -178,7 +178,7 @@ class Controller(object):
         """
         self.outFormatter.save_output(dir)
 
-    def close(self):
+    def clean_all(self):
         """
         Elimina los outputs generados por el preprocesador y las predicciones generadas por
         el programa.
