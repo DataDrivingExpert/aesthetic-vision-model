@@ -3,6 +3,7 @@ Convierte la salida cruda del modelo (ej. logits, bounding boxes) en
 algo visualizable o entendible por la UI.
 """
 import pandas as pd
+import shutil
 import os
 
 class OutputFormatter(object):
@@ -18,3 +19,13 @@ class OutputFormatter(object):
         """
         df = pd.DataFrame(output)
         df.to_excel(os.path.join(self.output_dir, self.filename), index=False)
+
+
+    def save_output(self, dir):
+        """
+        Guarda la salida formateada en un archivo.
+        """
+        outfile = os.path.join(self.output_dir, self.filename)
+        if os.path.exists(outfile):
+            shutil.copy(outfile, dir)
+

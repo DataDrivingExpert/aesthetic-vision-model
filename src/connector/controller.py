@@ -48,8 +48,9 @@ class Controller(object):
         score = 0
         g = self.symmetry_graph
         
-        for i in range(len(cls_ids)):
-            if i != 4 and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[-(i+1)])):
+        len_cls = len(cls_ids)
+        for i in range(len_cls):
+            if i != (len_cls // 2) and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[-(i+1)])):
                 score += 1
 
         return score
@@ -62,8 +63,9 @@ class Controller(object):
         score = 0
         g = self.symmetry_graph
         
-        for i in range(len(cls_ids)):
-            if i != 6 and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[i+1])):
+        nth = len(cls_ids)
+        for i in range(nth):
+            if i != (nth - 1) and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[i+1])):
                 score += 1
 
         return score
@@ -76,8 +78,9 @@ class Controller(object):
         score = 0
         g = self.continuity_graph
         
-        for i in range(len(cls_ids)):
-            if i != 6 and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[i+1])):
+        nth = len(cls_ids)
+        for i in range(nth):
+            if i != (nth - 1) and g.is_connected(g.get_v_by_id(cls_ids[i]), g.get_v_by_id(cls_ids[i+1])):
                 score += 1
 
         return score
@@ -169,6 +172,11 @@ class Controller(object):
         os.mkdir(pred_data_path)
         os.mkdir(os.path.join(pred_data_path, 'images'))
         
+    def save_results(self, dir):
+        """
+        Guarda los resultados de la evaluación en un directorio especificado.
+        """
+        self.outFormatter.save_output(dir)
 
     def close(self):
         """

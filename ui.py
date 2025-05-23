@@ -290,6 +290,17 @@ class AestheticApp(ctk.CTk):
         pass
 
     def save_results(self):
+        options = {
+            'defaultextension': '.xlsx',
+            'filetypes': [('Archivos Excel', '*.xlsx')],
+            'initialfile': 'results.xlsx',
+            'title': 'Guardar resultados como...'
+        }
+
+        # Mostrar el diálogo para elegir dónde guardar
+        target_path = filedialog.asksaveasfilename(**options)
+        if target_path:
+            self.controller.save_results(target_path)
         pass
 
     def on_close(self):
