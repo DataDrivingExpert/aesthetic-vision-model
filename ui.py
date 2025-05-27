@@ -6,6 +6,7 @@ from typing import Literal
 import pandas as pd
 import threading
 import os
+from pathlib import Path
 
 class AestheticApp(ctk.CTk):
     def __init__(self):
@@ -241,12 +242,13 @@ class AestheticApp(ctk.CTk):
     def __update_metrics(self):
         # Ubicar la salida de la predicción
         prediction_path = os.path.join(self.base_dir, 'outputs', 'predictions')
-        analysis_path = os.path.join(prediction_path, 'analysis')
+        analysis_path = os.path.join(prediction_path, 'analysis.xlsx')
         
         if os.path.exists(analysis_path):
             df = pd.read_excel(analysis_path)
             img_name = self.deployed_data[self.deployed_index]
-            img_name = os.path.basename(img_name)
+            img_name = Path(img_name).stem
+            print(f'img_name from Ui.py __update_metrics = {img_name}')
 
             data = df[df['image_name'] == img_name]
 
@@ -255,10 +257,13 @@ class AestheticApp(ctk.CTk):
                 global_symm = data['global_symmetry'].values[0]
                 continuity = data['continuity'].values[0]
 
-                self.d_local_symm.configure(text=local_symm)
-                self.d_global_symm.configure(text=global_symm)
-                self.d_continuity.configure(text=continuity)
+                print(f'data is not empty: {local_symm=}, {global_symm=}, {continuity=}')
+
+                self.d_local_symm.configure(text=str(local_symm))
+                self.d_global_symm.configure(text=str(global_symm))
+                self.d_continuity.configure(text=str(continuity))
             else:
+                print(f'data is empty for image: {img_name}')
                 self.d_local_symm.configure(text="0")
                 self.d_global_symm.configure(text="0")
                 self.d_continuity.configure(text="0")

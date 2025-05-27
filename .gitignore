@@ -8,6 +8,8 @@ notebooks/*
 outputs/predictions/*
 outputs/preprocessed_img/*
 outputs/plots/*
+outputs/model_train/*
+outputs/kfold_results/*
 *.ipynb_checkpoints
 *.png
 yolo*.pt

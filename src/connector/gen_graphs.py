@@ -35,7 +35,7 @@ class AestheticGraph(object):
 
     def __generate_vertices(self) -> list[Vertice]:
         vertices = []
-        print(f'{len(self.CLASSES)=}')
+        
         for i, cLabel in enumerate(self.CLASSES):
             vertices.append(Vertice(i, cLabel))
         return vertices
@@ -116,5 +116,5 @@ if __name__ == '__main__':
     aesthetic_gp = AestheticGraph()
     symmetry_gp, continuity_gp = aesthetic_gp.graphs
 
-    print("Graph of symmetry \n", symmetry_gp.get_graph(),'\n')
-    print("Graph of continuity \n", continuity_gp.get_graph(), '\n')
+    
+    

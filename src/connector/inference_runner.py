@@ -29,6 +29,7 @@ class InferenceRunner(object):
         :return: Resultados de la inferencia.
         """
         results = self.model.predict(
+            iou=0.0,
             source=image_path,
             save=True,
             project='outputs',
