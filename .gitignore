@@ -9,5 +9,5 @@ outputs/plots/*
 outputs/model_train/*
 outputs/kfold_results/*
 *.ipynb_checkpoints
-*.png
+test_img
 yolo*.pt

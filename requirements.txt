@@ -48,9 +48,9 @@ setuptools==80.8.0
 six==1.17.0
 sympy==1.14.0
 threadpoolctl==3.6.0
-torch==2.7.0+cu128
-torchaudio==2.7.0+cu128
-torchvision==0.22.0+cu128
+torch==2.7.0
+torchaudio==2.7.0
+torchvision==0.22.0
 tornado==6.4.2
 tqdm==4.67.1
 traitlets==5.14.3
