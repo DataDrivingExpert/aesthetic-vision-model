@@ -3,7 +3,7 @@ Carga el modelo (si no está cargado) y ejecuta inferencias con datos preprocesa
 """
 
 from ultralytics import YOLO
-import os
+import torch
 
 class InferenceRunner(object):
     """
@@ -20,6 +20,13 @@ class InferenceRunner(object):
         self.model = YOLO(self.model_path)
 
     
+    def __get_device(self):
+        if torch.cuda.is_available():
+            return 'cuda'
+        else:
+            return 'cpu'
+
+
     def predict(self, image_path):
         """
         Realiza la inferencia en una imagen o en un lote de imágenes 
@@ -29,7 +36,10 @@ class InferenceRunner(object):
         :return: Resultados de la inferencia.
         """
         results = self.model.predict(
-            iou=0.0,
+            iou=0.01,
+            conf=0.25,
+            device=self.__get_device(),
+            agnostic_nms=True,
             source=image_path,
             save=True,
             project='outputs',

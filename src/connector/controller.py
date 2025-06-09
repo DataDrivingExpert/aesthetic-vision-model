@@ -22,11 +22,9 @@ class Controller(object):
 
         # Cargar el modelo
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        # model_path = os.path.join(base_dir, '..', 'models', 'best.pt')
-        # model_path = os.path.normpath(model_path)
-        model_path = 'C:/Users/herre/Documents/uautonoma/trabajo-de-titulo/project/outputs/model_train/150_epochs_adamw/weights/best.pt'
+        model_path = os.path.join(base_dir, '..', 'models', 'best.pt')
+        model_path = os.path.normpath(model_path)
         model = InferenceRunner(model_path)
-
 
         self.model = model
         self.outFormatter = OF()
@@ -109,24 +107,24 @@ class Controller(object):
 
         for r in results:
             boxes = r.boxes
-            bb = boxes.xywh.cpu().numpy() # Bounding box en formato x_center y_center width height
+            bb = boxes.xywh.cpu().numpy() # Bounding box en formato: x_center y_center width height
             cls = boxes.cls.cpu().numpy() # ID de las clases detectadas
             img_name = Path(r.path).stem # Nombre de la imagen
-            print(f'image_name from __translate = {img_name}')
+            
 
             _sorted = [] # Lista de clases por cada objeto detectado en la imagen.
                          # Ordenadas de izquierda a derecha.
             for j in np.argsort(bb[:,0]):
                 _sorted.append(int(cls[j]))
             
-            print(f'{len(_sorted)=}')
+            
             if len(_sorted) != 7:
                 # Si no hay 7 objetos detectados, no se puede evaluar la imagen.
                 register_eval(img_name,0,0,0,True)
-                print('Image rejected')
+                
                 continue
             else:
-                print('Image accepted')
+                
                 global_symm = self.__eval_global_symmetry(_sorted)
                 local_symm = self.__eval_local_symmetry(_sorted)
                 continuity = self.__eval_continuity(_sorted)

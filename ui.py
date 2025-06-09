@@ -248,7 +248,7 @@ class AestheticApp(ctk.CTk):
             df = pd.read_excel(analysis_path)
             img_name = self.deployed_data[self.deployed_index]
             img_name = Path(img_name).stem
-            print(f'img_name from Ui.py __update_metrics = {img_name}')
+            
 
             data = df[df['image_name'] == img_name]
 
@@ -257,13 +257,13 @@ class AestheticApp(ctk.CTk):
                 global_symm = data['global_symmetry'].values[0]
                 continuity = data['continuity'].values[0]
 
-                print(f'data is not empty: {local_symm=}, {global_symm=}, {continuity=}')
+                
 
                 self.d_local_symm.configure(text=str(local_symm))
                 self.d_global_symm.configure(text=str(global_symm))
                 self.d_continuity.configure(text=str(continuity))
             else:
-                print(f'data is empty for image: {img_name}')
+                
                 self.d_local_symm.configure(text="0")
                 self.d_global_symm.configure(text="0")
                 self.d_continuity.configure(text="0")
@@ -324,8 +324,8 @@ class AestheticApp(ctk.CTk):
 
     def clear_all(self):
         res = messagebox.askyesno(
-                title="Confirmación",
-                message="¿Estás seguro de que deseas limpiar todos los resultados? Los datos no se guardarán.",
+                title="Confirmation",
+                message="Are you sure you want to delete all results? No data will be saved.",
                 icon="warning"
             )
         if res:
