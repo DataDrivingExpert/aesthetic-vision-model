@@ -10,7 +10,9 @@ class OutputFormatter(object):
     def __init__(self):
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
         self.output_dir = os.path.join(self.base_dir,"..","..","outputs","predictions")
+        
         self.filename = "analysis.xlsx"
+        os.makedirs(self.output_dir, exist_ok=True)
         pass
 
     def write_output(self, output:dict):
