@@ -14,6 +14,11 @@ class Preprocessor:
     def __init__(self, data):
         self.data = data
 
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        output_dir = os.path.join(base_dir,'..','..','outputs','preprocessed_img')
+        self.output_path = os.path.normpath(output_dir)
+        os.makedirs(self.output_path, exist_ok=True)
+
     def perform(self, image_path):
         """
         Preprocesa una imagen: la convierte a PNG, redimensiona (si es necesario) y la guarda en un directorio específico.
@@ -30,13 +35,8 @@ class Preprocessor:
             grayscale_image = self.__convert_to_grayscale(resized_image)
             
             # Guardar imagen preprocesada
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            output_dir = os.path.join(base_dir,'..','..','outputs','preprocessed_img')
-            output_path = os.path.normpath(output_dir)
-            os.makedirs(output_path, exist_ok=True)
-
             filename = os.path.splitext(os.path.basename(image_path))[0] + ".png"
-            save_path = os.path.join(output_path, filename)
+            save_path = os.path.join(self.output_path, filename)
             
             grayscale_image.save(save_path, format="PNG")
             
