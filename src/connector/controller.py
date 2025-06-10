@@ -31,6 +31,20 @@ class Controller(object):
         self.symmetry_graph = symmetry_graph
         self.continuity_graph = continuity_graph
 
+        self.__make_output_dirs()
+
+    def __make_output_dirs(self,):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        pp_dir = os.path.join(base_dir,'..','..','outputs','preprocessed_img')
+        pp_dir = os.path.normpath(pp_dir)
+
+        pred_dir = os.path.join(base_dir,'..','..','outputs','predictions')
+        pred_dir = os.path.normpath(pred_dir)
+        
+        os.makedirs(pp_dir, exist_ok=True)
+        os.makedirs(pred_dir, exist_ok=True)
+        pass
+
     def __preprocess_input(self, input_data:tuple[str]):
         """
         Preprocesa los datos de entrada antes de pasarlos al modelo.
